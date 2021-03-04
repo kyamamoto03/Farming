@@ -14,4 +14,10 @@
     <ProjectReference Include="..\..\..\..\Samples\Docker\Docker.DotNet\src\Docker.DotNet\Docker.DotNet.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="FarmingContainer.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

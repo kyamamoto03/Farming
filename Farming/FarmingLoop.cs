@@ -1,8 +1,9 @@
 ﻿using Docker.DotNet;
 using Docker.DotNet.Models;
+using Farming.Model;
+using Farming.Services;
 using Microsoft.Extensions.Hosting;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -54,19 +55,25 @@ namespace Farming
         #endregion
         private readonly string DOCKER_STATE_RUNNING = "running";
         private readonly string DOCKER_STATE_EXIT = "exited";
+        public string FarmingContainerFileName = "FarmingContainer.json";
 
         private async Task MainLoop()
         {
-            string target_image = "nginx";
-            string target_image_tag = "latest";
-            IList<string> Env = new List<string>();
-            Env.Add(@"-v c:\docker\nginx:/usr/share/nginx/html:ro");
-            Env.Add(@"-p 80:80");
+            var farmingContainerService = new FarmingContainerService();
+
+            var targetContainers = await farmingContainerService.FromFile(FarmingContainerFileName);
 
             while (!_stoppingCts.IsCancellationRequested)
             {
-                await StartContainer(target_image, target_image_tag, Env);
+                foreach (var targetContainer in targetContainers.ContainerServices)
+                {
+                    string target_image = targetContainer.Image;
+                    string target_image_tag = targetContainer.Tag;
 
+
+                    await StartContainer(targetContainer);
+
+                }
                 await Task.Delay(5000);
             }
         }
@@ -77,9 +84,9 @@ namespace Farming
         /// </summary>
         /// <param name="ImageName"></param>
         /// <returns></returns>
-        private async Task StartContainer(string ImageName, string ImangeNameTag,IList<string>Env)
+        private async Task StartContainer(ContainerService targetContainer)
         {
-            var container = await GetContainer(ImageName, ImangeNameTag);
+            var container = await GetContainer(targetContainer.Image, targetContainer.Tag);
 
             if (container is not null && await IsExist(container.ID) == true)
             {
@@ -92,26 +99,28 @@ namespace Farming
             else
             {
                 //Container Not Found
-                if (FindImage(ImageName, ImangeNameTag) is null)
+                if (await FindImage(targetContainer) is null)
                 {
                     //Image Pull
-                    await PullContainerCommmand(ImageName, ImangeNameTag);
+                    await PullContainerCommmand(targetContainer);
                 }
-                await RunContainerCommand(ImageName, ImangeNameTag, Env);
+                await RunContainerCommand(targetContainer);
             }
 
         }
 
-        private async Task<ImagesListResponse> FindImage(string ImageName, string ImangeNameTag)
+        private async Task<ImagesListResponse> FindImage(ContainerService targetContainer)
         {
             var imagesListParameters = new ImagesListParameters();
             imagesListParameters.All = true;
 
             var Images = await client.Images.ListImagesAsync(imagesListParameters);
-            return Images.SingleOrDefault(x => x.RepoTags.Contains($"{ImageName}:{ImangeNameTag}"));
+            var find = Images.SingleOrDefault(x => x.RepoTags.Contains($"{targetContainer.Image}:{targetContainer.Tag}"));
+
+            return find;
 
         }
-        private async Task<bool> PullContainerCommmand(string ImageName, string ImangeNameTag)
+        private async Task<bool> PullContainerCommmand(ContainerService targetContainer)
         {
             var progressJSONMessage = new ProgressJSONMessage
             {
@@ -127,8 +136,8 @@ namespace Farming
                 await client.Images.CreateImageAsync(
                     new ImagesCreateParameters
                     {
-                        FromImage = ImageName,
-                        Tag = ImangeNameTag,
+                        FromImage = targetContainer.Image,
+                        Tag = targetContainer.Tag,
                     },
                     null,
                     progressJSONMessage);
@@ -141,7 +150,7 @@ namespace Farming
             return true;
         }
 
-        private async Task<ContainerListResponse> GetContainer(string ImageName,string ImageNameTag)
+        private async Task<ContainerListResponse> GetContainer(string ImageName, string ImageNameTag)
         {
             IList<ContainerListResponse> containers = await client.Containers.ListContainersAsync(
                 new ContainersListParameters()
@@ -194,25 +203,40 @@ namespace Farming
             var ret = await client.Containers.StartContainerAsync(id, new ContainerStartParameters());
             return ret;
         }
-        public async Task RunContainerCommand(string ImageName, string ImageNameTas,IList<string> Env)
+        public async Task RunContainerCommand(ContainerService targetContainer)
         {
             try
             {
-                var ports = new List<PortBinding>();
-                ports.Add(new PortBinding { HostPort = "80" });
+                var hostConfig = new HostConfig();
+
 
                 var portBindings = new Dictionary<string, IList<PortBinding>>();
-                portBindings.Add("80/tcp", ports);
+                if (targetContainer.Ports is not null)
+                {
+                    foreach (var p in targetContainer.Ports)
+                    {
+                        var ps = p.Split(':');
 
-                var hostConfig = new HostConfig();
-                hostConfig.PortBindings = portBindings;
-                hostConfig.Binds = new List<string>();
-                hostConfig.Binds.Add(@"c:\docker\nginx:/usr/share/nginx/html:ro");
+                        var ports = new List<PortBinding>();
+                        ports.Add(new PortBinding { HostPort = ps[1] });
+
+                        portBindings.Add(ps[0], ports);
+
+                    }
+
+                    hostConfig.PortBindings = portBindings;
+                }
+
+                if (targetContainer.Volumes is not null)
+                {
+                    hostConfig.Binds = new List<string>();
+                    targetContainer.Volumes.ToList().ForEach(x => hostConfig.Binds.Add(x));
+                }
 
                 var cp = new CreateContainerParameters
                 {
-                    Image = $"{ImageName}:{ImageNameTas}",
-                    Env = Env,
+                    Image = $"{targetContainer.Image}:{targetContainer.Tag}",
+                    Env = targetContainer.Envs,
                     HostConfig = hostConfig
 
                 };

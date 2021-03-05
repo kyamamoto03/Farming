@@ -62,20 +62,26 @@ namespace Farming
             _logger = logger;
         }
         public string FarmingContainerFileName = "FarmingContainer.json";
+        public string FarmingContainerURL= "https://farming.z11.web.core.windows.net/FarmingContainer.json";
 
         private async Task MainLoop()
         {
             _logger.LogInformation("MainLoop Start");
 
-            var farmingContainerService = new FarmingContainerService();
+            var farmingContainerService = new FarmingContainerService<ContainerServiceBase>();
 
-            var targetContainers = await farmingContainerService.FromFile(FarmingContainerFileName);
+            //var targetContainers = await farmingContainerService.FromFile(FarmingContainerFileName);
+            ContainerServiceBase targetContainers = await farmingContainerService.FromURL(FarmingContainerURL);
+
             var containerService = new Services.ContainerService();
 
             containerService.MessageCalled = (x => _logger.LogInformation(x));
 
             while (!_stoppingCts.IsCancellationRequested)
             {
+                //設定ファイル読み込み
+                targetContainers = await farmingContainerService.FromURL(FarmingContainerURL);
+
                 ///jsonにないcontainerを削除
                 var RunningContainers = await containerService.GetAllContainer();
                 foreach(var rc in RunningContainers)

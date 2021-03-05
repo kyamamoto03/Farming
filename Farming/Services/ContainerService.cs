@@ -12,7 +12,6 @@ namespace Farming.Services
     public class ContainerService
     {
         private readonly string DOCKER_STATE_RUNNING = "running";
-        private readonly string DOCKER_STATE_EXIT = "exited";
         private DockerClient client = new DockerClientConfiguration().CreateClient();
 
         public Action<string> MessageCalled;

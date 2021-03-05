@@ -1,5 +1,6 @@
 ﻿using Docker.DotNet;
 using Docker.DotNet.Models;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,12 +9,16 @@ using System.Threading.Tasks;
 
 namespace Farming.Services
 {
-    class ContainerService
+    public class ContainerService
     {
         private readonly string DOCKER_STATE_RUNNING = "running";
         private readonly string DOCKER_STATE_EXIT = "exited";
+        private DockerClient client = new DockerClientConfiguration().CreateClient();
 
-        DockerClient client = new DockerClientConfiguration().CreateClient();
+        public Action<string> MessageCalled;
+        public ContainerService()
+        {
+        }
 
         /// <summary>
         /// ImageNameのコンテナを起動
@@ -28,6 +33,7 @@ namespace Farming.Services
             {
                 if (await IsRunning(container.ID) == false)
                 {
+                    MessageCalled?.Invoke($"Start Container:{container.Image}");
 
                     await StartContainerCommand(container.ID);
                 }
@@ -63,7 +69,7 @@ namespace Farming.Services
                 _onJSONMessageCalled = (m) =>
                 {
                     // Status could be 'Pulling from...'
-                    Console.WriteLine($"{m.ID} - {m.Status} {m.From} - {m.Stream}");
+                    MessageCalled?.Invoke($"{m.ID} - {m.Status} {m.From} - {m.Stream}");
                 }
             };
 
@@ -80,8 +86,7 @@ namespace Farming.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
-                throw;
+                throw ;
             }
             return true;
         }
@@ -160,6 +165,8 @@ namespace Farming.Services
         }
         public async Task RunContainerCommand(Model.ContainerService targetContainer)
         {
+            MessageCalled?.Invoke($"Run Container:{targetContainer.Image}");
+
             try
             {
                 var hostConfig = new HostConfig();
@@ -200,7 +207,6 @@ namespace Farming.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
                 throw;
             }
         }

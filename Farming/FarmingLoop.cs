@@ -3,6 +3,7 @@ using Docker.DotNet.Models;
 using Farming.Model;
 using Farming.Services;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,7 +28,7 @@ namespace Farming
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"{ex}");
+                    _logger.LogError($"{ex}");
                 }
             });
 
@@ -53,14 +54,25 @@ namespace Farming
 
         }
         #endregion
+
+        private readonly ILogger<FarmingLoop> _logger;
+
+        public FarmingLoop(ILogger<FarmingLoop> logger)
+        {
+            _logger = logger;
+        }
         public string FarmingContainerFileName = "FarmingContainer.json";
 
         private async Task MainLoop()
         {
+            _logger.LogInformation("MainLoop Start");
+
             var farmingContainerService = new FarmingContainerService();
 
             var targetContainers = await farmingContainerService.FromFile(FarmingContainerFileName);
             var containerService = new Services.ContainerService();
+
+            containerService.MessageCalled = (x => _logger.LogInformation(x));
 
             while (!_stoppingCts.IsCancellationRequested)
             {
@@ -70,7 +82,7 @@ namespace Farming
                 {
                     if (!targetContainers.ContainerServices.Any(x => $"{x.Image}:{x.Tag}" == $"{rc.Image}") == true)
                     {
-                        Console.WriteLine($"{rc.Image}");
+                        _logger.LogInformation($"Container Stop & Remove:{rc.Image}");
                         await containerService.StopAndDeleteContainer(rc.ID);
                     }
                 }

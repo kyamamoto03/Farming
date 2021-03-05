@@ -77,7 +77,7 @@ namespace Farming
                 await Task.Delay(5000);
             }
         }
-        DockerClient client = new DockerClientConfiguration(new Uri("npipe://./pipe/docker_engine")).CreateClient();
+        DockerClient client = new DockerClientConfiguration().CreateClient();
 
         /// <summary>
         /// ImageNameのコンテナを起動
@@ -127,7 +127,7 @@ namespace Farming
                 _onJSONMessageCalled = (m) =>
                 {
                     // Status could be 'Pulling from...'
-                    Console.WriteLine($"{System.Reflection.MethodInfo.GetCurrentMethod().Module}->{System.Reflection.MethodInfo.GetCurrentMethod().Name}: _onJSONMessageCalled - {m.ID} - {m.Status} {m.From} - {m.Stream}");
+                    Console.WriteLine($"{m.ID} - {m.Status} {m.From} - {m.Stream}");
                 }
             };
 

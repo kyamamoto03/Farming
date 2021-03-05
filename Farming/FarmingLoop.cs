@@ -64,8 +64,19 @@ namespace Farming
 
             while (!_stoppingCts.IsCancellationRequested)
             {
+                ///jsonにないcontainerを削除
+                var RunningContainers = await containerService.GetAllContainer();
+                foreach(var rc in RunningContainers)
+                {
+                    if (!targetContainers.ContainerServices.Any(x => $"{x.Image}:{x.Tag}" == $"{rc.Image}") == true)
+                    {
+                        Console.WriteLine($"{rc.Image}");
+                        await containerService.StopAndDeleteContainer(rc.ID);
+                    }
+                }
                 foreach (var targetContainer in targetContainers.ContainerServices)
                 {
+                    
                     string target_image = targetContainer.Image;
                     string target_image_tag = targetContainer.Tag;
 

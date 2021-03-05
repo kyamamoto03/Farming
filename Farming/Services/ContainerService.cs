@@ -97,6 +97,17 @@ namespace Farming.Services
             return containers.SingleOrDefault(x => x.Image == $"{ImageName}:{ImageNameTag}");
         }
 
+        public async Task<IList<ContainerListResponse>> GetAllContainer()
+        {
+            IList<ContainerListResponse> containers = await client.Containers.ListContainersAsync(
+                new ContainersListParameters()
+                {
+                    Limit = 100,
+                });
+
+            return containers;
+        }
+
         private async Task<bool> IsRunning(string id)
         {
             IList<ContainerListResponse> containers = await client.Containers.ListContainersAsync(
@@ -141,6 +152,12 @@ namespace Farming.Services
             return ret;
         }
 
+        public async Task StopAndDeleteContainer(string id)
+        {
+            await client.Containers.StopContainerAsync(id, new ContainerStopParameters());
+            await client.Containers.RemoveContainerAsync(id, new ContainerRemoveParameters { Force = true });
+
+        }
         public async Task RunContainerCommand(Model.ContainerService targetContainer)
         {
             try

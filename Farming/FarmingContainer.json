@@ -10,9 +10,9 @@
                 "c:/docker/nginx:/usr/share/nginx/html:ro"
             ]
         },
-        {
-            "Image" : "hello-world",
-            "Tag" : "latest"
-        }
+      {
+        "Image": "hello-world",
+        "Tag": "latest"
+      }
     ]
 }

@@ -13,8 +13,20 @@ namespace Farming.Model
 
     public class ContainerService
     {
-        public string Image { get; set; }
-        public string Tag { get; set; }
+        private string _Image;
+        public string Image
+        {
+            get => _Image;
+            set => _Image = value.ToLower();
+        }
+
+        private string _Tag;
+        public string Tag
+        {
+            get => _Image;
+            set => _Image = value.ToLower();
+        }
+
         public string[] Ports { get; set; }
         public string[] Volumes { get; set; }
         public string[] Envs { get; set; }

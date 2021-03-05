@@ -4,8 +4,7 @@
             "Image" : "nginx",
             "Tag" : "latest",
             "Ports" : [
-                "80/tcp:80",
-                "81/tcp:81"
+                "80/tcp:80"
             ],
             "Volumes" : [
                 "c:/docker/nginx:/usr/share/nginx/html:ro"

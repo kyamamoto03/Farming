@@ -70,8 +70,8 @@ namespace Farming
 
             var farmingContainerService = new FarmingContainerService<ContainerServiceBase>();
 
-            //var targetContainers = await farmingContainerService.FromFile(FarmingContainerFileName);
-            ContainerServiceBase targetContainers = await farmingContainerService.FromURL(FarmingContainerURL);
+            var targetContainers = await farmingContainerService.FromFile(FarmingContainerFileName);
+            //ContainerServiceBase targetContainers = await farmingContainerService.FromURL(FarmingContainerURL);
 
             var containerService = new Services.ContainerService();
 
@@ -89,7 +89,7 @@ namespace Farming
                     if (!targetContainers.ContainerServices.Any(x => $"{x.Image}:{x.Tag}" == $"{rc.Image}") == true)
                     {
                         _logger.LogInformation($"Container Stop & Remove:{rc.Image}");
-                        await containerService.StopAndDeleteContainer(rc.ID);
+                        //await containerService.StopAndDeleteContainer(rc.ID);
                     }
                 }
                 foreach (var targetContainer in targetContainers.ContainerServices)

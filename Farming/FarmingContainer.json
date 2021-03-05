@@ -13,6 +13,21 @@
       {
         "Image": "hello-world",
         "Tag": "latest"
+      },
+      {
+        "Image": "mongo",
+        "Tag": "latest",
+        "Ports": [
+          "27017/tcp:27017",
+          "28017/tcp:28017"
+        ],
+        "Volumes": [
+          "/mongodb:/data/db:rw"
+        ],
+        "Envs": [
+          "MONGO_INITDB_ROOT_USERNAME=mongoroot",
+          "MONGO_INITDB_ROOT_PASSWORD=KB98kdi7Ehks"
+        ]
       }
     ]
 }

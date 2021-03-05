@@ -23,8 +23,8 @@ namespace Farming.Model
         private string _Tag;
         public string Tag
         {
-            get => _Image;
-            set => _Image = value.ToLower();
+            get => _Tag;
+            set => _Tag = value.ToLower();
         }
 
         public string[] Ports { get; set; }

@@ -1,12 +1,8 @@
-﻿using Docker.DotNet;
-using Docker.DotNet.Models;
-using Farming.Model;
+﻿using Farming.Model;
 using Farming.Services;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -93,7 +89,7 @@ namespace Farming
 
                 ///jsonにないcontainerを削除ループ
                 var RunningContainers = await containerService.GetAllContainer();
-                foreach(var rc in RunningContainers)
+                foreach (var rc in RunningContainers)
                 {
                     if (!containerSettingList.ContainerSettings.Any(x => $"{x.Image}:{x.Tag}" == $"{rc.Image}") == true)
                     {
@@ -113,7 +109,7 @@ namespace Farming
                 //起動ループ
                 foreach (var targetContainer in containerSettingList.ContainerSettings)
                 {
-                    
+
                     string target_image = targetContainer.Image;
                     string target_image_tag = targetContainer.Tag;
 
@@ -125,7 +121,7 @@ namespace Farming
             }
         }
 
-         private async Task<ContainerSettingsList> LoadContainerSettingsList()
+        private async Task<ContainerSettingsList> LoadContainerSettingsList()
         {
             var jsonService = new JsonService<ContainerSettingsList>();
             ContainerSettingsList containerSettingsList;

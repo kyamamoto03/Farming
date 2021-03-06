@@ -73,6 +73,7 @@ namespace Farming
         private string FARMING_SETTING_INPUT_TYPE_FILE = "file";
         private string FARMING_SETTING_TRUE = "true";
 
+        private readonly string MY_CONTAINER_NAME = "farming";
         private async Task MainLoop()
         {
             _logger.LogInformation("MainLoop Start");
@@ -95,15 +96,18 @@ namespace Farming
                     {
                         if (!containerSettingList.ContainerSettings.Any(x => $"{x.Image}:{x.Tag}" == $"{rc.Image}") == true)
                         {
-                            if (farmingSetting.ContainerRemove == FARMING_SETTING_TRUE)
+                            if (!rc.Image.Contains(MY_CONTAINER_NAME))
                             {
-                                _logger.LogInformation($"Container Stop :{rc.Image}");
-                                await containerService.StopContainer(rc.ID);
-                            }
-                            else
-                            {
-                                _logger.LogInformation($"Container Stop & Remove:{rc.Image}");
-                                await containerService.StopAndDeleteContainer(rc.ID);
+                                if (farmingSetting.ContainerRemove == FARMING_SETTING_TRUE)
+                                {
+                                    _logger.LogInformation($"Container Stop :{rc.Image}");
+                                    await containerService.StopContainer(rc.ID);
+                                }
+                                else
+                                {
+                                    _logger.LogInformation($"Container Stop & Remove:{rc.Image}");
+                                    await containerService.StopAndDeleteContainer(rc.ID);
+                                }
                             }
                         }
                     }

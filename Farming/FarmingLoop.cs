@@ -77,16 +77,18 @@ namespace Farming
 
             while (!_stoppingCts.IsCancellationRequested)
             {
-                //設定ファイル読み込み
+                //設定情報読込
+                var farmingSeeting = await LoadFarmingSetting();
+                //コンテナ情報読み込み
                 var containerSettingList = await LoadContainerSettingsList();
 
-                ///jsonにないcontainerを削除
+                ///jsonにないcontainerを削除ループ
                 var RunningContainers = await containerService.GetAllContainer();
                 foreach(var rc in RunningContainers)
                 {
                     if (!containerSettingList.ContainerSettings.Any(x => $"{x.Image}:{x.Tag}" == $"{rc.Image}") == true)
                     {
-                        if ((await LoadFarmingSetting()).ContainerRemove == FARMING_SETTING_TRUE)
+                        if (farmingSeeting.ContainerRemove == FARMING_SETTING_TRUE)
                         {
                             _logger.LogInformation($"Container Stop :{rc.Image}");
                             await containerService.StopContainer(rc.ID);
@@ -98,6 +100,8 @@ namespace Farming
                         }
                     }
                 }
+
+                //起動ループ
                 foreach (var targetContainer in containerSettingList.ContainerSettings)
                 {
                     
@@ -108,7 +112,7 @@ namespace Farming
                     await containerService.StartContainer(targetContainer);
 
                 }
-                await Task.Delay(5000);
+                await Task.Delay(farmingSeeting.WaitTime);
             }
         }
 

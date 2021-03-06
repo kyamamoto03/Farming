@@ -23,5 +23,7 @@ namespace Farming.Model
             get => _ContainerRemove;
             set => _ContainerRemove = value.ToLower();
         }
+
+        public int WaitTime { get; set; } = 5000;
     }
 }

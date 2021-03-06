@@ -2,11 +2,13 @@
 using Docker.DotNet.Models;
 using Farming.Model;
 using Farming.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -56,12 +58,21 @@ namespace Farming
         #endregion
 
         private readonly ILogger<FarmingLoop> _logger;
+        private readonly FarmingSetting farmingSetting;
 
-        public FarmingLoop(ILogger<FarmingLoop> logger)
+        public FarmingLoop(ILogger<FarmingLoop> logger, FarmingSetting setting)
         {
             _logger = logger;
+            farmingSetting = setting;
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"InputType:{farmingSetting.InputType}");
+            sb.AppendLine($"URI:{farmingSetting.URI}");
+            sb.AppendLine($"ContainerRemove:{farmingSetting.ContainerRemove}");
+            sb.AppendLine($"WaitTime:{farmingSetting.ToString()}");
+
+            _logger.LogInformation(sb.ToString());
         }
-        private string FarmingSeetingFileName = "FarmingSetting.json";
 
         private string FARMING_SETTING_INPUT_TYPE_FILE = "file";
         private string FARMING_SETTING_TRUE = "true";
@@ -77,8 +88,6 @@ namespace Farming
 
             while (!_stoppingCts.IsCancellationRequested)
             {
-                //設定情報読込
-                var farmingSeeting = await LoadFarmingSetting();
                 //コンテナ情報読み込み
                 var containerSettingList = await LoadContainerSettingsList();
 
@@ -88,7 +97,7 @@ namespace Farming
                 {
                     if (!containerSettingList.ContainerSettings.Any(x => $"{x.Image}:{x.Tag}" == $"{rc.Image}") == true)
                     {
-                        if (farmingSeeting.ContainerRemove == FARMING_SETTING_TRUE)
+                        if (farmingSetting.ContainerRemove == FARMING_SETTING_TRUE)
                         {
                             _logger.LogInformation($"Container Stop :{rc.Image}");
                             await containerService.StopContainer(rc.ID);
@@ -112,21 +121,12 @@ namespace Farming
                     await containerService.StartContainer(targetContainer);
 
                 }
-                await Task.Delay(farmingSeeting.WaitTime);
+                await Task.Delay(farmingSetting.WaitTime);
             }
         }
 
-        private async Task<FarmingSetting> LoadFarmingSetting()
+         private async Task<ContainerSettingsList> LoadContainerSettingsList()
         {
-            var farmingSettingJsonService = new JsonService<FarmingSetting>();
-            return await farmingSettingJsonService.FromFile(FarmingSeetingFileName);
-        }
-
-        private async Task<ContainerSettingsList> LoadContainerSettingsList()
-        {
-            var farmingSetting = await LoadFarmingSetting();
-
-            #region LoadContainerSetting
             var jsonService = new JsonService<ContainerSettingsList>();
             ContainerSettingsList containerSettingsList;
 
@@ -138,7 +138,6 @@ namespace Farming
             {
                 containerSettingsList = await jsonService.FromURL(farmingSetting.URI);
             }
-            #endregion
 
             return containerSettingsList;
         }

@@ -1,10 +1,8 @@
 ﻿using Farming.Model;
-using Farming.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Console;
 using System;
 using System.IO;
 
@@ -20,7 +18,11 @@ namespace Farming
                 services.AddLogging(b => b.AddConsole());
                 services.AddSingleton<FarmingSetting>(_ =>
                 {
-                    var builder = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile(path: "appsettings.json").Build();
+                    var builder = new ConfigurationBuilder()
+                    .SetBasePath(Directory.GetCurrentDirectory())
+                    .AddJsonFile(path: "appsettings.json")
+                    .AddEnvironmentVariables()
+                    .Build();
 
                     FarmingSetting farmingSetting = new FarmingSetting();
                     farmingSetting.InputType = builder["InputType"];
@@ -41,7 +43,7 @@ namespace Farming
         {
             try
             {
-                
+
 
                 CreateHostBuilder(args).Build().Run();
             }

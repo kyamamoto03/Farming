@@ -84,38 +84,44 @@ namespace Farming
 
             while (!_stoppingCts.IsCancellationRequested)
             {
-                //コンテナ情報読み込み
-                var containerSettingList = await LoadContainerSettingsList();
-
-                ///jsonにないcontainerを削除ループ
-                var RunningContainers = await containerService.GetAllContainer();
-                foreach (var rc in RunningContainers)
+                try
                 {
-                    if (!containerSettingList.ContainerSettings.Any(x => $"{x.Image}:{x.Tag}" == $"{rc.Image}") == true)
+                    //コンテナ情報読み込み
+                    var containerSettingList = await LoadContainerSettingsList();
+
+                    ///jsonにないcontainerを削除ループ
+                    var RunningContainers = await containerService.GetAllContainer();
+                    foreach (var rc in RunningContainers)
                     {
-                        if (farmingSetting.ContainerRemove == FARMING_SETTING_TRUE)
+                        if (!containerSettingList.ContainerSettings.Any(x => $"{x.Image}:{x.Tag}" == $"{rc.Image}") == true)
                         {
-                            _logger.LogInformation($"Container Stop :{rc.Image}");
-                            await containerService.StopContainer(rc.ID);
-                        }
-                        else
-                        {
-                            _logger.LogInformation($"Container Stop & Remove:{rc.Image}");
-                            await containerService.StopAndDeleteContainer(rc.ID);
+                            if (farmingSetting.ContainerRemove == FARMING_SETTING_TRUE)
+                            {
+                                _logger.LogInformation($"Container Stop :{rc.Image}");
+                                await containerService.StopContainer(rc.ID);
+                            }
+                            else
+                            {
+                                _logger.LogInformation($"Container Stop & Remove:{rc.Image}");
+                                await containerService.StopAndDeleteContainer(rc.ID);
+                            }
                         }
                     }
-                }
 
-                //起動ループ
-                foreach (var targetContainer in containerSettingList.ContainerSettings)
+                    //起動ループ
+                    foreach (var targetContainer in containerSettingList.ContainerSettings)
+                    {
+
+                        string target_image = targetContainer.Image;
+                        string target_image_tag = targetContainer.Tag;
+
+
+                        await containerService.StartContainer(targetContainer);
+
+                    }
+                }catch(Exception ex)
                 {
-
-                    string target_image = targetContainer.Image;
-                    string target_image_tag = targetContainer.Tag;
-
-
-                    await containerService.StartContainer(targetContainer);
-
+                    _logger.LogError(ex.ToString());
                 }
                 await Task.Delay(farmingSetting.WaitTime);
             }

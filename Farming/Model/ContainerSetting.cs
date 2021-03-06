@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace Farming.Model
 {
-    public class ContainerServiceBase
+    public class ContainerSettingsList
     {
-        public ContainerService[] ContainerServices { get; set; }
+        public ContainerSetting[] ContainerSettings { get; set; }
     }
 
-    public class ContainerService
+    public class ContainerSetting
     {
         private string _Image;
         public string Image

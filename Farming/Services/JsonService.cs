@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Farming.Services
 {
-    public class FarmingContainerService<T>
+    public class JsonService<T>
     {
         public async Task<T> FromFile(string JsonFileName)
         {

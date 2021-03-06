@@ -1,5 +1,5 @@
 {
-    "ContainerServices" : [
+    "ContainerSettings" : [
         {
             "Image" : "nginx",
             "Tag" : "latest",

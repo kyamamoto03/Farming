@@ -61,38 +61,44 @@ namespace Farming
         {
             _logger = logger;
         }
-        public string FarmingContainerFileName = "FarmingContainer.json";
-        public string FarmingContainerURL= "https://farming.z11.web.core.windows.net/FarmingContainer.json";
+        private string FarmingSeetingFileName = "FarmingSetting.json";
+
+        private string FARMING_SETTING_INPUT_TYPE_FILE = "file";
+        private string FARMING_SETTING_TRUE = "true";
 
         private async Task MainLoop()
         {
             _logger.LogInformation("MainLoop Start");
 
-            var farmingContainerService = new FarmingContainerService<ContainerServiceBase>();
 
-            var targetContainers = await farmingContainerService.FromFile(FarmingContainerFileName);
-            //ContainerServiceBase targetContainers = await farmingContainerService.FromURL(FarmingContainerURL);
-
-            var containerService = new Services.ContainerService();
+            var containerService = new ContainerService();
 
             containerService.MessageCalled = (x => _logger.LogInformation(x));
 
             while (!_stoppingCts.IsCancellationRequested)
             {
                 //設定ファイル読み込み
-                targetContainers = await farmingContainerService.FromURL(FarmingContainerURL);
+                var containerSettingList = await LoadContainerSettingsList();
 
                 ///jsonにないcontainerを削除
                 var RunningContainers = await containerService.GetAllContainer();
                 foreach(var rc in RunningContainers)
                 {
-                    if (!targetContainers.ContainerServices.Any(x => $"{x.Image}:{x.Tag}" == $"{rc.Image}") == true)
+                    if (!containerSettingList.ContainerSettings.Any(x => $"{x.Image}:{x.Tag}" == $"{rc.Image}") == true)
                     {
-                        _logger.LogInformation($"Container Stop & Remove:{rc.Image}");
-                        //await containerService.StopAndDeleteContainer(rc.ID);
+                        if ((await LoadFarmingSetting()).ContainerRemove == FARMING_SETTING_TRUE)
+                        {
+                            _logger.LogInformation($"Container Stop :{rc.Image}");
+                            await containerService.StopContainer(rc.ID);
+                        }
+                        else
+                        {
+                            _logger.LogInformation($"Container Stop & Remove:{rc.Image}");
+                            await containerService.StopAndDeleteContainer(rc.ID);
+                        }
                     }
                 }
-                foreach (var targetContainer in targetContainers.ContainerServices)
+                foreach (var targetContainer in containerSettingList.ContainerSettings)
                 {
                     
                     string target_image = targetContainer.Image;
@@ -104,6 +110,33 @@ namespace Farming
                 }
                 await Task.Delay(5000);
             }
+        }
+
+        private async Task<FarmingSetting> LoadFarmingSetting()
+        {
+            var farmingSettingJsonService = new JsonService<FarmingSetting>();
+            return await farmingSettingJsonService.FromFile(FarmingSeetingFileName);
+        }
+
+        private async Task<ContainerSettingsList> LoadContainerSettingsList()
+        {
+            var farmingSetting = await LoadFarmingSetting();
+
+            #region LoadContainerSetting
+            var jsonService = new JsonService<ContainerSettingsList>();
+            ContainerSettingsList containerSettingsList;
+
+            if (farmingSetting.InputType == FARMING_SETTING_INPUT_TYPE_FILE)
+            {
+                containerSettingsList = await jsonService.FromFile(farmingSetting.URI);
+            }
+            else
+            {
+                containerSettingsList = await jsonService.FromURL(farmingSetting.URI);
+            }
+            #endregion
+
+            return containerSettingsList;
         }
     }
 }

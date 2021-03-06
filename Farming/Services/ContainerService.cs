@@ -24,7 +24,7 @@ namespace Farming.Services
         /// </summary>
         /// <param name="ImageName"></param>
         /// <returns></returns>
-        public async Task StartContainer(Model.ContainerService targetContainer)
+        public async Task StartContainer(Model.ContainerSetting targetContainer)
         {
             var container = await GetContainer(targetContainer.Image, targetContainer.Tag);
 
@@ -49,7 +49,7 @@ namespace Farming.Services
             }
         }
 
-        private async Task<ImagesListResponse> FindImage(Model.ContainerService targetContainer)
+        private async Task<ImagesListResponse> FindImage(Model.ContainerSetting targetContainer)
         {
             var imagesListParameters = new ImagesListParameters();
             imagesListParameters.All = true;
@@ -61,7 +61,7 @@ namespace Farming.Services
 
         }
 
-        private async Task<bool> PullContainerCommmand(Model.ContainerService targetContainer)
+        private async Task<bool> PullContainerCommmand(Model.ContainerSetting targetContainer)
         {
             var progressJSONMessage = new ProgressJSONMessage
             {
@@ -156,13 +156,19 @@ namespace Farming.Services
             return ret;
         }
 
-        public async Task StopAndDeleteContainer(string id)
+        public async Task StopContainer(string id)
         {
-            await client.Containers.StopContainerAsync(id, new ContainerStopParameters());
             await client.Containers.RemoveContainerAsync(id, new ContainerRemoveParameters { Force = true });
 
         }
-        public async Task RunContainerCommand(Model.ContainerService targetContainer)
+
+        public async Task StopAndDeleteContainer(string id)
+        {
+            await StopContainer(id);
+            await client.Containers.RemoveContainerAsync(id, new ContainerRemoveParameters { Force = true });
+
+        }
+        public async Task RunContainerCommand(Model.ContainerSetting targetContainer)
         {
             MessageCalled?.Invoke($"Run Container:{targetContainer.Image}");
 

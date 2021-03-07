@@ -158,7 +158,7 @@ namespace Farming.Services
 
         public async Task StopContainer(string id)
         {
-            await client.Containers.RemoveContainerAsync(id, new ContainerRemoveParameters { Force = true });
+            await client.Containers.StopContainerAsync(id, new ContainerStopParameters());
 
         }
 

@@ -3,6 +3,7 @@ using Farming.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -96,17 +97,17 @@ namespace Farming
                     {
                         if (!containerSettingList.ContainerSettings.Any(x => $"{x.Image}:{x.Tag}" == $"{rc.Image}") == true)
                         {
-                            if (!rc.Image.Contains(MY_CONTAINER_NAME))
+                            if (IsIgnoreContainer(rc.Image))
                             {
                                 if (farmingSetting.ContainerRemove == FARMING_SETTING_TRUE)
                                 {
-                                    _logger.LogInformation($"Container Stop :{rc.Image}");
-                                    await containerService.StopContainer(rc.ID);
+                                    _logger.LogInformation($"Container Stop & Remove:{rc.Image}");
+                                    await containerService.StopAndDeleteContainer(rc.ID);
                                 }
                                 else
                                 {
-                                    _logger.LogInformation($"Container Stop & Remove:{rc.Image}");
-                                    await containerService.StopAndDeleteContainer(rc.ID);
+                                    _logger.LogInformation($"Container Stop :{rc.Image}");
+                                    await containerService.StopContainer(rc.ID);
                                 }
                             }
                         }
@@ -129,6 +130,21 @@ namespace Farming
                 }
                 await Task.Delay(farmingSetting.WaitTime);
             }
+        }
+
+        private bool IsIgnoreContainer(string ImageName)
+        {
+            var ignoreList = new List<string>();
+            ignoreList.Add(MY_CONTAINER_NAME);
+
+            foreach(var i in farmingSetting.Ignore)
+            {
+                ignoreList.Add(i);
+            }
+
+            var ret = ignoreList.Any(x => ImageName.Contains(x));
+
+            return !ret;
         }
 
         private async Task<ContainerSettingsList> LoadContainerSettingsList()

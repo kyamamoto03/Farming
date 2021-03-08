@@ -26,6 +26,6 @@ namespace Farming.Model
 
         public int WaitTime { get; set; } = 5000;
 
-        public string[] Ignore;
+        public string[] Ignore { get; set; } = new string[0];
     }
 }

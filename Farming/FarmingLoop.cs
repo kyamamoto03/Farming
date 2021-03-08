@@ -68,7 +68,8 @@ namespace Farming
             sb.AppendLine($"ContainerRemove:{farmingSetting.ContainerRemove}");
             sb.AppendLine($"WaitTime:{farmingSetting.WaitTime}");
             sb.Append($"Ignore:");
-            foreach(var i in farmingSetting.Ignore)
+
+            foreach (var i in farmingSetting.Ignore)
             {
                 sb.Append($"{i},");
             }
@@ -143,7 +144,7 @@ namespace Farming
             var ignoreList = new List<string>();
             ignoreList.Add(MY_CONTAINER_NAME);
 
-            foreach(var i in farmingSetting.Ignore)
+            foreach (var i in farmingSetting.Ignore)
             {
                 ignoreList.Add(i);
             }

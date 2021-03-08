@@ -2,11 +2,15 @@
 Edgeサーバで動作するコンテナを管理するソフトです。Farming自体Docker上で実行します。
 Farmingが動作しているDockerのコンテナをjsonファイルで記述した通りにコンテナを構成します。
 
-凄くシンプルなk8sと言ったところでしょうか(大げさ)
+凄くシンプルなk8sと言ったところでしょうか(大げさ)<br/>
+<br/>
+
+## ！注意！ 
+構成ファイルに記述していないコンテナは削除されるので注意してください
 
 # QuickStart
 ## 構成ファイルを記述します
-ContainerSetting.json
+ContainerSetting.json(この例ではnginxとmongodbが起動します)
 ```
 {
     "ContainerSettings" : [

@@ -21,8 +21,8 @@
           "/mongodb:/data/db:rw"
         ],
         "Envs": [
-          "MONGO_INITDB_ROOT_USERNAME=mongoroot",
-          "MONGO_INITDB_ROOT_PASSWORD=KB98kdi7Ehks"
+          "MONGO_INITDB_ROOT_USERNAME=root",
+          "MONGO_INITDB_ROOT_PASSWORD=rootpass"
         ]
       }
     ]

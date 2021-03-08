@@ -7,13 +7,9 @@
                 "80/tcp:80"
             ],
             "Volumes" : [
-                "c:/docker/nginx:/usr/share/nginx/html:ro"
+                "/docker/nginx:/usr/share/nginx/html:ro"
             ]
         },
-      {
-        "Image": "hello-world",
-        "Tag": "latest"
-      },
       {
         "Image": "mongo",
         "Tag": "latest",

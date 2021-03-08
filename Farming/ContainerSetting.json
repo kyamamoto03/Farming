@@ -1,15 +1,15 @@
 {
     "ContainerSettings" : [
-        {
-            "Image" : "nginx",
-            "Tag" : "latest",
-            "Ports" : [
-                "80/tcp:80"
-            ],
-            "Volumes" : [
-                "/docker/nginx:/usr/share/nginx/html:ro"
-            ]
-        },
+      {
+          "Image" : "nginx",
+          "Tag" : "latest",
+          "Ports" : [
+              "80/tcp:80"
+          ],
+          "Volumes" : [
+              "/docker/nginx:/usr/share/nginx/html:ro"
+          ]
+      },
       {
         "Image": "mongo",
         "Tag": "latest",

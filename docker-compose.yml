@@ -1,0 +1,15 @@
+version: '3.6'
+
+services:
+
+  farming:
+    image: kyamamoto03/farming:0.1
+    restart: always
+    environment:
+      InputType: HTTP
+      URI: https://farming.z11.web.core.windows.net/ContainerSetting.json
+      WaitTime: 10000
+      ContainerRemove: 'True'
+      Ignore: "Influxdb"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock

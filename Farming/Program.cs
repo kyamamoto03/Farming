@@ -29,8 +29,8 @@ namespace Farming
                     farmingSetting.URI = builder["URI"];
                     farmingSetting.ContainerRemove = builder["ContainerRemove"];
                     farmingSetting.WaitTime = int.Parse(builder["WaitTime"]);
-                    farmingSetting.Ignore = builder.GetSection("Ignore").Get<string[]>();
-                    
+                    farmingSetting.Ignore = builder["Ignore"].ToLower().Split(',');
+
                     return farmingSetting;
                 });
                 services.AddSingleton<IConfiguration>(_ =>

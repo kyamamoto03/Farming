@@ -66,7 +66,13 @@ namespace Farming
             sb.AppendLine($"InputType:{farmingSetting.InputType}");
             sb.AppendLine($"URI:{farmingSetting.URI}");
             sb.AppendLine($"ContainerRemove:{farmingSetting.ContainerRemove}");
-            sb.AppendLine($"WaitTime:{farmingSetting.ToString()}");
+            sb.AppendLine($"WaitTime:{farmingSetting.WaitTime}");
+            sb.Append($"Ignore:");
+            foreach(var i in farmingSetting.Ignore)
+            {
+                sb.Append($"{i},");
+            }
+            sb.AppendLine();
 
             _logger.LogInformation(sb.ToString());
         }

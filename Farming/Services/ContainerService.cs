@@ -45,7 +45,25 @@ namespace Farming.Services
                     //Image Pull
                     await PullContainerCommmand(targetContainer);
                 }
+                await NetworkConstruction(targetContainer);
+
                 await RunContainerCommand(targetContainer);
+            }
+        }
+
+        private async Task NetworkConstruction(Model.ContainerSetting targetContainer)
+        {
+            if (targetContainer.Networks != null && targetContainer.Networks.Count() > 0)
+            {
+                var ExistNetworks = await client.Networks.ListNetworksAsync();
+
+                if (!ExistNetworks.Any(x => targetContainer.Networks.Any(n => n == x.Name)))
+                {
+                    var param = new NetworksCreateParameters() { Name = targetContainer.Networks[0] };
+
+                    await client.Networks.CreateNetworkAsync(param);
+                }
+
             }
         }
 
@@ -192,6 +210,9 @@ namespace Farming.Services
                     }
 
                     hostConfig.PortBindings = portBindings;
+                    hostConfig.DNS = new List<string>();
+                    hostConfig.DNSOptions = new List<string>();
+                    hostConfig.DNSOptions = new List<string>();
                 }
 
                 if (targetContainer.Volumes is not null)
@@ -200,11 +221,24 @@ namespace Farming.Services
                     targetContainer.Volumes.ToList().ForEach(x => hostConfig.Binds.Add(x));
                 }
 
+                var networkConfig = new NetworkingConfig();
+                if (targetContainer.Networks is not null)
+                {
+                    networkConfig.EndpointsConfig = new Dictionary<string, EndpointSettings>();
+
+                    string networkName = targetContainer.Networks[0];
+                    var endpointSetting = new EndpointSettings();
+                    networkConfig.EndpointsConfig.Add(networkName, endpointSetting);
+                    hostConfig.NetworkMode = networkName;
+                }
+
                 var cp = new CreateContainerParameters
                 {
                     Image = $"{targetContainer.Image}:{targetContainer.Tag}",
+                    Name = $"{targetContainer.Image}",
                     Env = targetContainer.Envs,
-                    HostConfig = hostConfig
+                    HostConfig = hostConfig,
+                    NetworkingConfig = networkConfig
 
                 };
                 var response = await client.Containers.CreateContainerAsync(cp);

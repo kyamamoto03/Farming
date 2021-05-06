@@ -30,6 +30,7 @@ namespace Farming.Model
         public string[] Ports { get; set; }
         public string[] Volumes { get; set; }
         public string[] Envs { get; set; }
+        public string[] Networks { get; set; }
     }
 
 }

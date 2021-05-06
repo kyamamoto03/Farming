@@ -18,11 +18,22 @@
           "28017/tcp:28017"
         ],
         "Volumes": [
-          "/mongodb:/data/db:rw"
+          "c:/docker/mongodb:/data/db:rw"
         ],
-        "Envs": [
+        "Networks": [
+          "mongonet"
+        ],
+        "$$$$Envs": [
           "MONGO_INITDB_ROOT_USERNAME=root",
           "MONGO_INITDB_ROOT_PASSWORD=rootpass"
+        ]
+      },
+      {
+        "Image": "hello-mongo",
+        "Name": "asdf",
+        "Tag": "0.14",
+        "Networks": [
+          "mongonet"
         ]
       }
     ]

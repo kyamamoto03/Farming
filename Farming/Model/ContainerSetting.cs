@@ -19,7 +19,19 @@ namespace Farming.Model
             get => _Image;
             set => _Image = value.ToLower();
         }
-
+        private string _Name;
+        public string Name
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_Name) == true)
+                {
+                    return Image;
+                }
+                return _Name;
+            }
+            set => _Name = value.ToLower();
+        }
         private string _Tag;
         public string Tag
         {

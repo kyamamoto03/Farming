@@ -30,6 +30,7 @@
       },
       {
         "Image": "hello-mongo",
+        "Name": "asdf",
         "Tag": "0.14",
         "Networks": [
           "mongonet"

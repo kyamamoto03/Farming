@@ -32,7 +32,7 @@ namespace Farming.Services
             {
                 if (await IsRunning(container.ID) == false)
                 {
-                    MessageCalled?.Invoke($"Start Container:{container.Image}");
+                    MessageCalled?.Invoke($"Start Container:{container.Image} Name:{targetContainer.Name}");
 
                     await StartContainerCommand(container.ID);
                 }
@@ -235,7 +235,7 @@ namespace Farming.Services
                 var cp = new CreateContainerParameters
                 {
                     Image = $"{targetContainer.Image}:{targetContainer.Tag}",
-                    Name = $"{targetContainer.Image}",
+                    Name = $"{targetContainer.Name}",
                     Env = targetContainer.Envs,
                     HostConfig = hostConfig,
                     NetworkingConfig = networkConfig

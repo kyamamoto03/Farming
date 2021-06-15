@@ -53,6 +53,8 @@ ContainerSetting.json(この例ではnginxとmongodbが起動します)
     ボリューム（コンテナは削除される場合があるので、必ず永続化してください）
 * Envs</br>
     環境変数
+* Networks</br>
+    ネットワーク（コンテナ同士で通信する場合、すべてのコンテナのNetworkに同一の識別文字を記入してください）
 が指定出来ます
 
 ## Farming設定

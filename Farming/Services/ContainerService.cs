@@ -73,7 +73,7 @@ namespace Farming.Services
             imagesListParameters.All = true;
 
             var Images = await client.Images.ListImagesAsync(imagesListParameters);
-            var find = Images.SingleOrDefault(x => x.RepoTags.Contains($"{targetContainer.Image}:{targetContainer.Tag}"));
+            var find = Images.SingleOrDefault(x => x.RepoTags != null && x.RepoTags.Contains($"{targetContainer.Image}:{targetContainer.Tag}"));
 
             return find;
 

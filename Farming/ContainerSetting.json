@@ -29,9 +29,9 @@
         ]
       },
       {
-        "Image": "hello-mongo",
+        "Image": "kyamamoto03/hello-mongo",
         "Name": "asdf",
-        "Tag": "0.14",
+        "Tag": "latest",
         "Networks": [
           "mongonet"
         ]

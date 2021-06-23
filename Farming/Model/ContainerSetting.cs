@@ -43,6 +43,7 @@ namespace Farming.Model
         public string[] Volumes { get; set; }
         public string[] Envs { get; set; }
         public string[] Networks { get; set; }
+        public string Ulimits { get; set; }
     }
 
 }

@@ -57,13 +57,15 @@ namespace Farming.Services
             {
                 var ExistNetworks = await client.Networks.ListNetworksAsync();
 
-                if (!ExistNetworks.Any(x => targetContainer.Networks.Any(n => n == x.Name)))
+                foreach(string network in targetContainer.Networks)
                 {
-                    var param = new NetworksCreateParameters() { Name = targetContainer.Networks[0] };
+                    if (!ExistNetworks.Any(x => network == x.Name))
+                    {
+                        var param = new NetworksCreateParameters() { Name = targetContainer.Networks[0] };
 
-                    await client.Networks.CreateNetworkAsync(param);
+                        await client.Networks.CreateNetworkAsync(param);
+                    }
                 }
-
             }
         }
 

@@ -234,6 +234,13 @@ namespace Farming.Services
                     hostConfig.NetworkMode = networkName;
                 }
 
+                if (string.IsNullOrEmpty(targetContainer.Ulimits) == false)
+                {
+                    hostConfig.Ulimits = new List<Ulimit>();
+                    hostConfig.Ulimits.Add(MakeUlimit(targetContainer.Ulimits));
+
+                }
+
                 var cp = new CreateContainerParameters
                 {
                     Image = $"{targetContainer.Image}:{targetContainer.Tag}",
@@ -250,6 +257,34 @@ namespace Farming.Services
             {
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Ulimitsを作成
+        /// 現状memlockしかなさそうなので、固定で作成
+        /// </summary>
+        /// <param name="d"></param>
+        /// <returns></returns>
+        private Ulimit MakeUlimit(string d)
+        {
+            Ulimit ret = new();
+
+            int Hard;
+            int Soft;
+            try
+            {
+                var sp = d.Split(",");
+                Hard = Int32.Parse(sp[0]);
+                Soft = Int32.Parse(sp[1]);
+            }
+            catch
+            {
+                throw new Exception("Invalid Ulimits");
+            }
+            ret.Name = "memlock";
+            ret.Hard = Hard;
+            ret.Soft = Soft;
+            return ret;
         }
 
         private class ProgressJSONMessage : IProgress<JSONMessage>

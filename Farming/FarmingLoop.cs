@@ -154,6 +154,11 @@ namespace Farming
             return !ret;
         }
 
+        /// <summary>
+        /// ContainerSetting読み込み
+        /// InputTypeが"file"の場合はローカルフォルダから読み込む
+        /// </summary>
+        /// <returns></returns>
         private async Task<ContainerSettingsList> LoadContainerSettingsList()
         {
             var jsonService = new JsonService<ContainerSettingsList>();

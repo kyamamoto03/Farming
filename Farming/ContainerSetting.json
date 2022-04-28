@@ -29,13 +29,15 @@
         ]
       },
       {
-        "Image": "kyamamoto03/hello-mongo",
+        "Image": "iforcomenergysolution/hello-mongo",
         "Name": "asdf",
         "Tag": "latest",
         "Networks": [
           "mongonet"
         ],
-        "Ulimits": "-1,-1"
+        "Ulimits": "-1,-1",
+        "UserName": "kyamamoto03",
+        "Password": "826cb776-beee-4fc6-b6be-65ec3b276cb3"
       }
     ]
 }

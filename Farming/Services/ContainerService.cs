@@ -1,10 +1,8 @@
 ﻿using Docker.DotNet;
 using Docker.DotNet.Models;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Farming.Services
@@ -57,7 +55,7 @@ namespace Farming.Services
             {
                 var ExistNetworks = await client.Networks.ListNetworksAsync();
 
-                foreach(string network in targetContainer.Networks)
+                foreach (string network in targetContainer.Networks)
                 {
                     if (!ExistNetworks.Any(x => network == x.Name))
                     {
@@ -95,12 +93,14 @@ namespace Farming.Services
             try
             {
                 AuthConfig? authConfig = null;
-                if (targetContainer.UserName is { Length: > 0} && targetContainer.Password is { Length: > 0})
+                if (targetContainer.UserName is { Length: > 0 } && targetContainer.Password is { Length: > 0 })
                 {
                     //認証情報を設定
-                    authConfig = new AuthConfig { 
+                    authConfig = new AuthConfig
+                    {
                         Username = targetContainer.UserName
-                        , Password = targetContainer.Password
+                        ,
+                        Password = targetContainer.Password
                     };
                 }
 
@@ -115,7 +115,7 @@ namespace Farming.Services
             }
             catch (Exception ex)
             {
-                throw ;
+                throw;
             }
             return true;
         }

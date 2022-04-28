@@ -94,13 +94,23 @@ namespace Farming.Services
 
             try
             {
+                AuthConfig? authConfig = null;
+                if (targetContainer.UserName is { Length: > 0} && targetContainer.Password is { Length: > 0})
+                {
+                    //認証情報を設定
+                    authConfig = new AuthConfig { 
+                        Username = targetContainer.UserName
+                        , Password = targetContainer.Password
+                    };
+                }
+
                 await client.Images.CreateImageAsync(
                     new ImagesCreateParameters
                     {
                         FromImage = targetContainer.Image,
                         Tag = targetContainer.Tag,
                     },
-                    null,
+                    authConfig,
                     progressJSONMessage);
             }
             catch (Exception ex)

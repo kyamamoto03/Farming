@@ -44,6 +44,16 @@ namespace Farming.Model
         public string[] Envs { get; set; }
         public string[] Networks { get; set; }
         public string Ulimits { get; set; }
+
+        /// <summary>
+        /// ContainerRegistryログインユーザ名
+        /// </summary>
+        public string? UserName { get; set; }
+
+        /// <summary>
+        /// ContainerRegistryログインパスワード
+        /// </summary>
+        public string? Password { get; set; }
     }
 
 }

@@ -95,6 +95,7 @@ namespace Farming
             {
                 try
                 {
+                    _logger.LogInformation($"{DateTime.Now}\tMainLoop");
                     //コンテナ情報読み込み
                     var containerSettingList = await LoadContainerSettingsList();
 

@@ -97,39 +97,41 @@ namespace Farming
                 {
                     //コンテナ情報読み込み
                     var containerSettingList = await LoadContainerSettingsList();
-
-                    ///jsonにないcontainerを削除ループ
-                    var RunningContainers = await containerService.GetAllContainer();
-                    foreach (var rc in RunningContainers)
+                    if (containerSettingList != null)
                     {
-                        if (!containerSettingList.ContainerSettings.Any(x => $"{x.Image}:{x.Tag}" == $"{rc.Image}") == true)
+                        ///jsonにないcontainerを削除ループ
+                        var RunningContainers = await containerService.GetAllContainer();
+                        foreach (var rc in RunningContainers)
                         {
-                            if (IsIgnoreContainer(rc.Image))
+                            if (!containerSettingList.ContainerSettings.Any(x => $"{x.Image}:{x.Tag}" == $"{rc.Image}") == true)
                             {
-                                if (farmingSetting.ContainerRemove == FARMING_SETTING_TRUE)
+                                if (IsIgnoreContainer(rc.Image))
                                 {
-                                    _logger.LogInformation($"Container Stop & Remove:{rc.Image}");
-                                    await containerService.StopAndDeleteContainer(rc.ID);
-                                }
-                                else
-                                {
-                                    _logger.LogInformation($"Container Stop :{rc.Image}");
-                                    await containerService.StopContainer(rc.ID);
+                                    if (farmingSetting.ContainerRemove == FARMING_SETTING_TRUE)
+                                    {
+                                        _logger.LogInformation($"Container Stop & Remove:{rc.Image}");
+                                        await containerService.StopAndDeleteContainer(rc.ID);
+                                    }
+                                    else
+                                    {
+                                        _logger.LogInformation($"Container Stop :{rc.Image}");
+                                        await containerService.StopContainer(rc.ID);
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    //起動ループ
-                    foreach (var targetContainer in containerSettingList.ContainerSettings)
-                    {
+                        //起動ループ
+                        foreach (var targetContainer in containerSettingList.ContainerSettings)
+                        {
 
-                        string target_image = targetContainer.Image;
-                        string target_image_tag = targetContainer.Tag;
+                            string target_image = targetContainer.Image;
+                            string target_image_tag = targetContainer.Tag;
 
 
-                        await containerService.StartContainer(targetContainer);
+                            await containerService.StartContainer(targetContainer);
 
+                        }
                     }
                 }catch(Exception ex)
                 {
@@ -163,17 +165,24 @@ namespace Farming
         {
             var jsonService = new JsonService<ContainerSettingsList>();
             ContainerSettingsList containerSettingsList;
-
-            if (farmingSetting.InputType == FARMING_SETTING_INPUT_TYPE_FILE)
+            try
             {
-                containerSettingsList = await jsonService.FromFile(farmingSetting.URI);
-            }
-            else
-            {
-                containerSettingsList = await jsonService.FromURL(farmingSetting.URI);
-            }
+                if (farmingSetting.InputType == FARMING_SETTING_INPUT_TYPE_FILE)
+                {
+                    containerSettingsList = await jsonService.FromFile(farmingSetting.URI);
+                }
+                else
+                {
+                    containerSettingsList = await jsonService.FromURL(farmingSetting.URI);
+                }
 
-            return containerSettingsList;
+                return containerSettingsList;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(farmingSetting.URI + "が取得できません");
+                return null;
+            }
         }
     }
 }

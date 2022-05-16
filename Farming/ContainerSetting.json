@@ -1,41 +1,18 @@
 {
     "ContainerSettings" : [
       {
-        "Image": "nginx",
-        "Tag": "latest",
+        "Image": "iforcomenergysolution/wtm-std",
+        "Name": "wtm-std1",
+        "Tag": "1.01",
         "Ports": [
-          "80/tcp:80"
-        ],
-        "Volumes": [
-          "/docker/nginx:/usr/share/nginx/html:ro"
-        ]
-      },
-      {
-        "Image": "mongo",
-        "Tag": "latest",
-        "Ports": [
-          "27017/tcp:27017",
-          "28017/tcp:28017"
-        ],
-        "Volumes": [
-          "c:/docker/mongodb:/data/db:rw"
+          "80/tcp:5001"
         ],
         "Networks": [
-          "mongonet"
+          "wtmnet"
         ],
-        "$$$$Envs": [
-          "MONGO_INITDB_ROOT_USERNAME=root",
-          "MONGO_INITDB_ROOT_PASSWORD=rootpass"
-        ]
-      },
-      {
-        "Image": "iforcomenergysolution/hello-mongo",
-        "Name": "asdf",
-        "Tag": "latest",
-        "Networks": [
-          "mongonet"
+        "Envs": [
+          "WTMSetting:Mongo:MongoDBConnectionString=mongodb://mongodb-primary:27017?readPreference=primary&appname=WRMServer&directConnection=true&ssl=false"
         ],
-        "Ulimits": "-1,-1",
         "UserName": "kyamamoto03",
         "Password": "826cb776-beee-4fc6-b6be-65ec3b276cb3"
       }

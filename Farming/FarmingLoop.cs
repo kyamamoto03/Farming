@@ -141,8 +141,6 @@ namespace Farming
                                 await containerService.StopContainer(container.ID);
                                 await containerService.StartContainer(targetContainer);
                             }
-                            //分単位の判定のため60秒待機させて複数回再起動を防ぐ
-                            await Task.Delay(60000);
                         }
 
                         //起動ループ

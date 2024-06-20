@@ -95,6 +95,11 @@ namespace Farming
 
             containerService.MessageCalled = (x => _logger.LogInformation(x));
 
+            //再起動する時間と分を合わせた時刻情報
+            var restartTiming = new TimeSpan(farmingSetting.RestartHour, farmingSetting.RestartMinute, 0);
+            //待機時間の半分
+            var halfWaitTime = TimeSpan.FromMilliseconds(farmingSetting.WaitTime / 2);
+
             while (!_stoppingCts.IsCancellationRequested)
             {
                 try
@@ -127,7 +132,7 @@ namespace Farming
                         }
 
                         //コンテナ再起動
-                        if (DateTime.Now.TimeOfDay.Hours == farmingSetting.RestartHour && DateTime.Now.TimeOfDay.Minutes == farmingSetting.RestartMinute)
+                        if ((DateTime.Now.TimeOfDay >= restartTiming - halfWaitTime) && (DateTime.Now.TimeOfDay <= restartTiming + halfWaitTime))
                         {
                             foreach (var targetContainer in containerSettingList.ContainerSettings)
                             {

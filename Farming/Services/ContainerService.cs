@@ -13,6 +13,7 @@ namespace Farming.Services
         private DockerClient client = new DockerClientConfiguration().CreateClient();
 
         public Action<string> MessageCalled;
+
         public ContainerService()
         {
         }
@@ -76,7 +77,6 @@ namespace Farming.Services
             var find = Images.SingleOrDefault(x => x.RepoTags != null && x.RepoTags.Contains($"{targetContainer.Image}:{targetContainer.Tag}"));
 
             return find;
-
         }
 
         private async Task<bool> PullContainerCommmand(Model.ContainerSetting targetContainer)
@@ -120,7 +120,7 @@ namespace Farming.Services
             return true;
         }
 
-        private async Task<ContainerListResponse> GetContainer(string ImageName, string ImageNameTag)
+        public async Task<ContainerListResponse> GetContainer(string ImageName, string ImageNameTag)
         {
             IList<ContainerListResponse> containers = await client.Containers.ListContainersAsync(
                 new ContainersListParameters()
@@ -189,15 +189,14 @@ namespace Farming.Services
         public async Task StopContainer(string id)
         {
             await client.Containers.StopContainerAsync(id, new ContainerStopParameters());
-
         }
 
         public async Task StopAndDeleteContainer(string id)
         {
             await StopContainer(id);
             await client.Containers.RemoveContainerAsync(id, new ContainerRemoveParameters { Force = true });
-
         }
+
         public async Task RunContainerCommand(Model.ContainerSetting targetContainer)
         {
             MessageCalled?.Invoke($"Run Container:{targetContainer.Image}");
@@ -205,7 +204,6 @@ namespace Farming.Services
             try
             {
                 var hostConfig = new HostConfig();
-
 
                 var portBindings = new Dictionary<string, IList<PortBinding>>();
                 if (targetContainer.Ports is not null)
@@ -218,7 +216,6 @@ namespace Farming.Services
                         ports.Add(new PortBinding { HostPort = ps[1] });
 
                         portBindings.Add(ps[0], ports);
-
                     }
 
                     hostConfig.PortBindings = portBindings;
@@ -248,7 +245,6 @@ namespace Farming.Services
                 {
                     hostConfig.Ulimits = new List<Ulimit>();
                     hostConfig.Ulimits.Add(MakeUlimit(targetContainer.Ulimits));
-
                 }
 
                 var cp = new CreateContainerParameters
@@ -258,7 +254,6 @@ namespace Farming.Services
                     Env = targetContainer.Envs,
                     HostConfig = hostConfig,
                     NetworkingConfig = networkConfig
-
                 };
                 var response = await client.Containers.CreateContainerAsync(cp);
                 await StartContainerCommand(response.ID);

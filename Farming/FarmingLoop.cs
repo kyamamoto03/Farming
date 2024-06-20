@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -14,6 +15,7 @@ namespace Farming
     public class FarmingLoop : IHostedService, IDisposable
     {
         #region IHostedService
+
         private readonly CancellationTokenSource _stoppingCts = new CancellationTokenSource();
         private Task _executingTask;
 
@@ -45,14 +47,16 @@ namespace Farming
                 await Task.WhenAny(_executingTask, Task.Delay(5000, cancellationToken));
             }
         }
-        #endregion
+
+        #endregion IHostedService
 
         #region IDisposable
+
         public void Dispose()
         {
-
         }
-        #endregion
+
+        #endregion IDisposable
 
         private readonly ILogger<FarmingLoop> _logger;
         private readonly FarmingSetting farmingSetting;
@@ -82,14 +86,19 @@ namespace Farming
         private string FARMING_SETTING_TRUE = "true";
 
         private readonly string MY_CONTAINER_NAME = "farming";
+
         private async Task MainLoop()
         {
             _logger.LogInformation("MainLoop Start");
 
-
             var containerService = new ContainerService();
 
             containerService.MessageCalled = (x => _logger.LogInformation(x));
+
+            //再起動する時間と分を合わせた時刻情報
+            var restartTiming = new TimeSpan(farmingSetting.RestartHour, farmingSetting.RestartMinute, 0);
+            //待機時間の半分
+            var halfWaitTime = TimeSpan.FromMilliseconds(farmingSetting.WaitTime / 2);
 
             while (!_stoppingCts.IsCancellationRequested)
             {
@@ -122,19 +131,29 @@ namespace Farming
                             }
                         }
 
+                        //コンテナ再起動
+                        if ((DateTime.Now.TimeOfDay >= restartTiming - halfWaitTime) && (DateTime.Now.TimeOfDay <= restartTiming + halfWaitTime))
+                        {
+                            foreach (var targetContainer in containerSettingList.ContainerSettings)
+                            {
+                                var container = await containerService.GetContainer(targetContainer.Image, targetContainer.Tag);
+                                _logger.LogInformation("Container Restart : {ContainerImage}", container.Image);
+                                await containerService.StopContainer(container.ID);
+                                await containerService.StartContainer(targetContainer);
+                            }
+                        }
+
                         //起動ループ
                         foreach (var targetContainer in containerSettingList.ContainerSettings)
                         {
-
                             string target_image = targetContainer.Image;
                             string target_image_tag = targetContainer.Tag;
 
-
                             await containerService.StartContainer(targetContainer);
-
                         }
                     }
-                }catch(Exception ex)
+                }
+                catch (Exception ex)
                 {
                     _logger.LogError(ex.ToString());
                 }

@@ -8,7 +8,7 @@ using System.IO;
 
 namespace Farming
 {
-    class Program
+    internal class Program
     {
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
@@ -24,11 +24,15 @@ namespace Farming
                     .AddEnvironmentVariables()
                     .Build();
 
-                    FarmingSetting farmingSetting = new FarmingSetting();
-                    farmingSetting.InputType = builder["InputType"];
-                    farmingSetting.URI = builder["URI"];
-                    farmingSetting.ContainerRemove = builder["ContainerRemove"];
-                    farmingSetting.WaitTime = int.Parse(builder["WaitTime"]);
+                    FarmingSetting farmingSetting = new()
+                    {
+                        InputType = builder["InputType"],
+                        URI = builder["URI"],
+                        ContainerRemove = builder["ContainerRemove"],
+                        WaitTime = int.Parse(builder["WaitTime"]),
+                        RestartHour = int.Parse(builder["RestartHour"]),
+                        RestartMinute = int.Parse(builder["RestartMinute"]),
+                    };
                     if (builder["Ignore"] is not null)
                     {
                         var s = builder["Ignore"].ToLower();
@@ -46,12 +50,10 @@ namespace Farming
                 });
             });
 
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             try
             {
-
-
                 CreateHostBuilder(args).Build().Run();
             }
             catch (OperationCanceledException)

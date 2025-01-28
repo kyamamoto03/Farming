@@ -30,7 +30,6 @@ namespace Farming
                         URI = builder["URI"],
                         ContainerRemove = builder["ContainerRemove"],
                         WaitTime = int.Parse(builder["WaitTime"]),
-                        RestartTime = builder.GetSection("RestartTime").Get<string[]>(),
                     };
                     if (builder["Ignore"] is not null)
                     {
@@ -38,6 +37,14 @@ namespace Farming
                         if (s.Length > 1)
                         {
                             farmingSetting.Ignore = s.Split(',');
+                        }
+                    }
+                    if (builder["RestartTime"] is not null)
+                    {
+                        var s = builder["RestartTime"].ToLower();
+                        if (s.Length > 1)
+                        {
+                            farmingSetting.RestartTime = s.Split(',');
                         }
                     }
                     return farmingSetting;

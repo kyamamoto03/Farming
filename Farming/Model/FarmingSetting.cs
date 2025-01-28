@@ -22,10 +22,8 @@
 
         public int WaitTime { get; set; } = 5000;
 
-        public string[] Ignore { get; set; } = new string[0];
+        public string[] Ignore { get; set; } = System.Array.Empty<string>();
 
-        public int RestartHour { get; set; } = 1;
-
-        public int RestartMinute { get; set; } = 0;
+        public string[] RestartTime { get; set; } = new string[1] { "1:00" };
     }
 }

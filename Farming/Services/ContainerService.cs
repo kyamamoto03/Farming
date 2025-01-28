@@ -10,7 +10,7 @@ namespace Farming.Services
     public class ContainerService
     {
         private readonly string DOCKER_STATE_RUNNING = "running";
-        private DockerClient client = new DockerClientConfiguration().CreateClient();
+        private readonly DockerClient client = new DockerClientConfiguration().CreateClient();
 
         public Action<string> MessageCalled;
 
@@ -52,7 +52,7 @@ namespace Farming.Services
 
         private async Task NetworkConstruction(Model.ContainerSetting targetContainer)
         {
-            if (targetContainer.Networks != null && targetContainer.Networks.Count() > 0)
+            if (targetContainer.Networks != null && targetContainer.Networks.Length > 0)
             {
                 var ExistNetworks = await client.Networks.ListNetworksAsync();
 
@@ -70,8 +70,10 @@ namespace Farming.Services
 
         private async Task<ImagesListResponse> FindImage(Model.ContainerSetting targetContainer)
         {
-            var imagesListParameters = new ImagesListParameters();
-            imagesListParameters.All = true;
+            var imagesListParameters = new ImagesListParameters
+            {
+                All = true
+            };
 
             var Images = await client.Images.ListImagesAsync(imagesListParameters);
             var find = Images.SingleOrDefault(x => x.RepoTags != null && x.RepoTags.Contains($"{targetContainer.Image}:{targetContainer.Tag}"));
@@ -113,7 +115,7 @@ namespace Farming.Services
                     authConfig,
                     progressJSONMessage);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }
@@ -212,8 +214,10 @@ namespace Farming.Services
                     {
                         var ps = p.Split(':');
 
-                        var ports = new List<PortBinding>();
-                        ports.Add(new PortBinding { HostPort = ps[1] });
+                        var ports = new List<PortBinding>
+                        {
+                            new() { HostPort = ps[1] }
+                        };
 
                         portBindings.Add(ps[0], ports);
                     }
@@ -243,8 +247,10 @@ namespace Farming.Services
 
                 if (string.IsNullOrEmpty(targetContainer.Ulimits) == false)
                 {
-                    hostConfig.Ulimits = new List<Ulimit>();
-                    hostConfig.Ulimits.Add(MakeUlimit(targetContainer.Ulimits));
+                    hostConfig.Ulimits = new List<Ulimit>
+                    {
+                        MakeUlimit(targetContainer.Ulimits)
+                    };
                 }
 
                 var cp = new CreateContainerParameters
@@ -258,7 +264,7 @@ namespace Farming.Services
                 var response = await client.Containers.CreateContainerAsync(cp);
                 await StartContainerCommand(response.ID);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }
@@ -270,7 +276,7 @@ namespace Farming.Services
         /// </summary>
         /// <param name="d"></param>
         /// <returns></returns>
-        private Ulimit MakeUlimit(string d)
+        private static Ulimit MakeUlimit(string d)
         {
             Ulimit ret = new();
 

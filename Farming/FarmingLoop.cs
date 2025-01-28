@@ -4,7 +4,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -16,7 +15,7 @@ namespace Farming
     {
         #region IHostedService
 
-        private readonly CancellationTokenSource _stoppingCts = new CancellationTokenSource();
+        private readonly CancellationTokenSource _stoppingCts = new();
         private Task _executingTask;
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -82,8 +81,8 @@ namespace Farming
             _logger.LogInformation(sb.ToString());
         }
 
-        private string FARMING_SETTING_INPUT_TYPE_FILE = "file";
-        private string FARMING_SETTING_TRUE = "true";
+        private readonly string FARMING_SETTING_INPUT_TYPE_FILE = "file";
+        private readonly string FARMING_SETTING_TRUE = "true";
 
         private readonly string MY_CONTAINER_NAME = "farming";
 
@@ -91,12 +90,30 @@ namespace Farming
         {
             _logger.LogInformation("MainLoop Start");
 
-            var containerService = new ContainerService();
-
-            containerService.MessageCalled = (x => _logger.LogInformation(x));
+            var containerService = new ContainerService
+            {
+                MessageCalled = (x => _logger.LogInformation(x))
+            };
 
             //再起動する時間と分を合わせた時刻情報
-            var restartTiming = new TimeSpan(farmingSetting.RestartHour, farmingSetting.RestartMinute, 0);
+            var restartTimings = new List<TimeSpan>();
+            foreach (var time in farmingSetting.RestartTime)
+            {
+                try
+                {
+                    // 時間と分を抽出して整数に変換
+                    int hours = ExtractHours(time);
+                    int minutes = ExtractMinutes(time);
+
+                    // 結果を表示
+                    restartTimings.Add(new(hours, minutes, 0));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"エラーが発生しました: {ex.Message}");
+                }
+            }
+
             //待機時間の半分
             var halfWaitTime = TimeSpan.FromMilliseconds(farmingSetting.WaitTime / 2);
 
@@ -131,15 +148,19 @@ namespace Farming
                             }
                         }
 
-                        //コンテナ再起動
-                        if ((DateTime.Now.TimeOfDay >= restartTiming - halfWaitTime) && (DateTime.Now.TimeOfDay <= restartTiming + halfWaitTime))
+                        //配列で指定された再起動時間すべてに対して、今再起動時間かどうかチェックする
+                        foreach (var restartTiming in restartTimings)
                         {
-                            foreach (var targetContainer in containerSettingList.ContainerSettings)
+                            //コンテナ再起動
+                            if ((DateTime.Now.TimeOfDay >= restartTiming - halfWaitTime) && (DateTime.Now.TimeOfDay <= restartTiming + halfWaitTime))
                             {
-                                var container = await containerService.GetContainer(targetContainer.Image, targetContainer.Tag);
-                                _logger.LogInformation("Container Restart : {ContainerImage}", container.Image);
-                                await containerService.StopContainer(container.ID);
-                                await containerService.StartContainer(targetContainer);
+                                foreach (var targetContainer in containerSettingList.ContainerSettings)
+                                {
+                                    var container = await containerService.GetContainer(targetContainer.Image, targetContainer.Tag);
+                                    _logger.LogInformation("Container Restart : {ContainerImage}", container.Image);
+                                    await containerService.StopContainer(container.ID);
+                                    await containerService.StartContainer(targetContainer);
+                                }
                             }
                         }
 
@@ -163,8 +184,10 @@ namespace Farming
 
         private bool IsIgnoreContainer(string ImageName)
         {
-            var ignoreList = new List<string>();
-            ignoreList.Add(MY_CONTAINER_NAME);
+            var ignoreList = new List<string>
+            {
+                MY_CONTAINER_NAME
+            };
 
             foreach (var i in farmingSetting.Ignore)
             {
@@ -198,11 +221,43 @@ namespace Farming
 
                 return containerSettingsList;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 _logger.LogError(farmingSetting.URI + "が取得できません");
                 return null;
             }
+        }
+
+        /// <summary>
+        /// stringから時間を抜き出す
+        /// </summary>
+        /// <param name="timeString"></param>
+        /// <returns></returns>
+        /// <exception cref="FormatException"></exception>
+        private static int ExtractHours(string timeString)
+        {
+            string[] parts = timeString.Split(':');
+            if (parts.Length != 2)
+            {
+                throw new FormatException("無効な時間形式です。");
+            }
+            return int.Parse(parts[0]);
+        }
+
+        /// <summary>
+        /// stringから分を抜き出す
+        /// </summary>
+        /// <param name="timeString"></param>
+        /// <returns></returns>
+        /// <exception cref="FormatException"></exception>
+        private static int ExtractMinutes(string timeString)
+        {
+            string[] parts = timeString.Split(':');
+            if (parts.Length != 2)
+            {
+                throw new FormatException("無効な時間形式です。");
+            }
+            return int.Parse(parts[1]);
         }
     }
 }

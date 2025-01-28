@@ -30,8 +30,7 @@ namespace Farming
                         URI = builder["URI"],
                         ContainerRemove = builder["ContainerRemove"],
                         WaitTime = int.Parse(builder["WaitTime"]),
-                        RestartHour = int.Parse(builder["RestartHour"]),
-                        RestartMinute = int.Parse(builder["RestartMinute"]),
+                        RestartTime = builder.GetSection("RestartTime").Get<string[]>(),
                     };
                     if (builder["Ignore"] is not null)
                     {

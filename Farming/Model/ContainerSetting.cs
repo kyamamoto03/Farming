@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Farming.Model
+﻿namespace Farming.Model
 {
     public class ContainerSettingsList
     {
@@ -14,12 +8,15 @@ namespace Farming.Model
     public class ContainerSetting
     {
         private string _Image;
+
         public string Image
         {
             get => _Image;
             set => _Image = value.ToLower();
         }
+
         private string _Name;
+
         public string Name
         {
             get
@@ -32,7 +29,9 @@ namespace Farming.Model
             }
             set => _Name = value.ToLower();
         }
+
         private string _Tag;
+
         public string Tag
         {
             get => _Tag;
@@ -55,5 +54,4 @@ namespace Farming.Model
         /// </summary>
         public string? Password { get; set; }
     }
-
 }

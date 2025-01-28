@@ -78,6 +78,13 @@ namespace Farming
             }
             sb.AppendLine();
 
+            sb.Append($"RestartTime:");
+            foreach (var i in farmingSetting.RestartTime)
+            {
+                sb.Append($"{i},");
+            }
+            sb.AppendLine();
+
             _logger.LogInformation(sb.ToString());
         }
 

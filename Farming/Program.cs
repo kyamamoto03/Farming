@@ -31,9 +31,9 @@ namespace Farming
                         ContainerRemove = builder["ContainerRemove"],
                         WaitTime = int.Parse(builder["WaitTime"]),
                         ContainerHost = builder["ContainerHost"],
-                        AwsAccessKeyId = builder["AWS:AccessKeyId"],
-                        AwsSecretAccessKey = builder["AWS:SecretAccessKey"],
-                        AwsRegion = builder["AWS:Region"] ?? "us-east-1"
+                        AwsAccessKeyId = builder["AWSAccessKeyId"],
+                        AwsSecretAccessKey = builder["AWSSecretAccessKey"],
+                        AwsRegion = builder["AWSRegion"] ?? "us-east-1"
                     };
                     if (builder["Ignore"] is not null)
                     {

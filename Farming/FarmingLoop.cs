@@ -4,7 +4,6 @@ using Amazon.ECR.Model;
 using Amazon.Runtime;
 using Farming.Model;
 using Farming.Services;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
@@ -64,7 +63,6 @@ namespace Farming
 
         private readonly ILogger<FarmingLoop> _logger;
         private readonly FarmingSetting farmingSetting;
-        private readonly IConfiguration _configuration;
 
         private readonly string FARMING_SETTING_CONTAINER_HOST_AWS = "AWS";
 
@@ -78,16 +76,10 @@ namespace Farming
         private string AwsSecretAccessKey { get; set; }
         private string AwsRegion { get; set; }
 
-        public FarmingLoop(ILogger<FarmingLoop> logger, FarmingSetting setting, IConfiguration configuration)
+        public FarmingLoop(ILogger<FarmingLoop> logger, FarmingSetting setting)
         {
             _logger = logger;
             farmingSetting = setting;
-            _configuration = configuration;
-
-            // AWS認証情報を設定ファイルから取得
-            AwsAccessKeyId = _configuration["AWS:AccessKeyId"];
-            AwsSecretAccessKey = _configuration["AWS:SecretAccessKey"];
-            AwsRegion = _configuration["AWS:Region"] ?? "ap-northeast-1"; // デフォルトリージョン
 
             var sb = new StringBuilder();
             sb.AppendLine($"InputType:{farmingSetting.InputType}");
@@ -113,9 +105,9 @@ namespace Farming
             // AWSの設定情報をログに出力（シークレットキーはマスク）
             if (farmingSetting.ContainerHost == FARMING_SETTING_CONTAINER_HOST_AWS)
             {
-                sb.AppendLine($"AWS Region: {AwsRegion}");
-                sb.AppendLine($"AWS Access Key ID: {MaskString(AwsAccessKeyId)}");
-                sb.AppendLine($"AWS Secret Access Key: {MaskString(AwsSecretAccessKey)}");
+                sb.AppendLine($"AWS Region: {farmingSetting.AwsRegion}");
+                sb.AppendLine($"AWS Access Key ID: {MaskString(farmingSetting.AwsAccessKeyId)}");
+                sb.AppendLine($"AWS Secret Access Key: {MaskString(farmingSetting.AwsSecretAccessKey)}");
             }
 
             _logger.LogInformation(sb.ToString());
@@ -258,15 +250,15 @@ namespace Farming
                 _logger.LogInformation($"AWSのコンテナ取得開始{targetContainer.Image}:{targetContainer.Tag}");
 
                 // 認証情報の検証
-                if (string.IsNullOrEmpty(AwsAccessKeyId) || string.IsNullOrEmpty(AwsSecretAccessKey))
+                if (string.IsNullOrEmpty(farmingSetting.AwsAccessKeyId) || string.IsNullOrEmpty(farmingSetting.AwsSecretAccessKey))
                 {
                     _logger.LogWarning("アクセスキーもしくはシークレットキーがありません。");
                 }
                 else
                 {
                     // 明示的に認証情報を指定
-                    var credentials = new BasicAWSCredentials(AwsAccessKeyId, AwsSecretAccessKey);
-                    var region = RegionEndpoint.GetBySystemName(AwsRegion);
+                    var credentials = new BasicAWSCredentials(farmingSetting.AwsAccessKeyId, farmingSetting.AwsSecretAccessKey);
+                    var region = RegionEndpoint.GetBySystemName(farmingSetting.AwsRegion);
 
                     // AWS ECRクライアントの作成（認証情報とリージョンを指定）
                     var ecrClient = new AmazonECRClient(credentials, region);

@@ -24,6 +24,27 @@
 
         public string[] Ignore { get; set; } = System.Array.Empty<string>();
 
-        public string[] RestartTime { get; set; } = new string[1] { "1:00" };
+        public string[] RestartTime { get; set; } = ["1:00"];
+
+        /// <summary>
+        /// コンテナのホスト
+        /// AWSならAWSそれ以外ならDockerHub等
+        /// </summary>
+        public string ContainerHost { get; set; } = string.Empty;
+
+        /// <summary>
+        /// AWSアクセスキー
+        /// </summary>
+        public string AwsAccessKeyId { get; set; }
+
+        /// <summary>
+        /// AWSシークレットアクセスキー
+        /// </summary>
+        public string AwsSecretAccessKey { get; set; }
+
+        /// <summary>
+        /// リージョン
+        /// </summary>
+        public string AwsRegion { get; set; } = "ap-northeast-1";
     }
 }

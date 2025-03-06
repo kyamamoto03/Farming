@@ -3,18 +3,21 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
+    <UserSecretsId>66e06cec-b429-48d8-87b0-b910764bb447</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AWSSDK.Core" Version="3.7.402.13" />
+    <PackageReference Include="AWSSDK.ECR" Version="3.7.409.16" />
     <PackageReference Include="Docker.DotNet" Version="3.125.15" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.0" />
-    <PackageReference Include="System.Net.Http.Json" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="9.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.2" />
+    <PackageReference Include="System.Net.Http.Json" Version="9.0.2" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,5 +1,10 @@
-﻿using Farming.Model;
+﻿using Amazon;
+using Amazon.ECR;
+using Amazon.ECR.Model;
+using Amazon.Runtime;
+using Farming.Model;
 using Farming.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
@@ -59,17 +64,37 @@ namespace Farming
 
         private readonly ILogger<FarmingLoop> _logger;
         private readonly FarmingSetting farmingSetting;
+        private readonly IConfiguration _configuration;
 
-        public FarmingLoop(ILogger<FarmingLoop> logger, FarmingSetting setting)
+        private readonly string FARMING_SETTING_CONTAINER_HOST_AWS = "AWS";
+
+        private readonly string FARMING_SETTING_INPUT_TYPE_FILE = "file";
+        private readonly string FARMING_SETTING_TRUE = "true";
+        private readonly string MY_CONTAINER_NAME = "farming";
+
+        // AWS認証情報を保持するプロパティを追加
+        private string AwsAccessKeyId { get; set; }
+
+        private string AwsSecretAccessKey { get; set; }
+        private string AwsRegion { get; set; }
+
+        public FarmingLoop(ILogger<FarmingLoop> logger, FarmingSetting setting, IConfiguration configuration)
         {
             _logger = logger;
             farmingSetting = setting;
+            _configuration = configuration;
+
+            // AWS認証情報を設定ファイルから取得
+            AwsAccessKeyId = _configuration["AWS:AccessKeyId"];
+            AwsSecretAccessKey = _configuration["AWS:SecretAccessKey"];
+            AwsRegion = _configuration["AWS:Region"] ?? "ap-northeast-1"; // デフォルトリージョン
 
             var sb = new StringBuilder();
             sb.AppendLine($"InputType:{farmingSetting.InputType}");
             sb.AppendLine($"URI:{farmingSetting.URI}");
             sb.AppendLine($"ContainerRemove:{farmingSetting.ContainerRemove}");
             sb.AppendLine($"WaitTime:{farmingSetting.WaitTime}");
+            sb.AppendLine($"ContainerHost:{farmingSetting.ContainerHost}");
             sb.Append($"Ignore:");
 
             foreach (var i in farmingSetting.Ignore)
@@ -85,13 +110,28 @@ namespace Farming
             }
             sb.AppendLine();
 
+            // AWSの設定情報をログに出力（シークレットキーはマスク）
+            if (farmingSetting.ContainerHost == FARMING_SETTING_CONTAINER_HOST_AWS)
+            {
+                sb.AppendLine($"AWS Region: {AwsRegion}");
+                sb.AppendLine($"AWS Access Key ID: {MaskString(AwsAccessKeyId)}");
+                sb.AppendLine($"AWS Secret Access Key: {MaskString(AwsSecretAccessKey)}");
+            }
+
             _logger.LogInformation(sb.ToString());
         }
 
-        private readonly string FARMING_SETTING_INPUT_TYPE_FILE = "file";
-        private readonly string FARMING_SETTING_TRUE = "true";
+        // 機密情報を一部マスクするヘルパーメソッド
+        private static string MaskString(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return "[未設定]";
 
-        private readonly string MY_CONTAINER_NAME = "farming";
+            if (input.Length <= 4)
+                return "****";
+
+            return String.Concat(input.AsSpan(0, 4), "".PadRight(input.Length - 4, '*'));
+        }
 
         private async Task MainLoop()
         {
@@ -109,15 +149,15 @@ namespace Farming
                 try
                 {
                     // 時間と分を抽出して整数に変換
-                    int hours = ExtractHours(time);
-                    int minutes = ExtractMinutes(time);
+                    var hours = ExtractHours(time);
+                    var minutes = ExtractMinutes(time);
 
                     // 結果を表示
                     restartTimings.Add(new(hours, minutes, 0));
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"エラーが発生しました: {ex.Message}");
+                    _logger.LogError($"時間形式のエラーが発生しました: {ex.Message}");
                 }
             }
 
@@ -164,9 +204,19 @@ namespace Farming
                                 foreach (var targetContainer in containerSettingList.ContainerSettings)
                                 {
                                     var container = await containerService.GetContainer(targetContainer.Image, targetContainer.Tag);
-                                    _logger.LogInformation("Container Restart : {ContainerImage}", container.Image);
-                                    await containerService.StopContainer(container.ID);
-                                    await containerService.StartContainer(targetContainer);
+                                    if (container != null)
+                                    {
+                                        _logger.LogInformation("Container Restart : {ContainerImage}", container.Image);
+                                        await containerService.StopContainer(container.ID);
+
+                                        // AWS ECRからの認証処理が必要な場合
+                                        if (farmingSetting.ContainerHost == FARMING_SETTING_CONTAINER_HOST_AWS)
+                                        {
+                                            await AuthenticateToECR(targetContainer);
+                                        }
+
+                                        await containerService.StartContainer(targetContainer);
+                                    }
                                 }
                             }
                         }
@@ -174,8 +224,15 @@ namespace Farming
                         //起動ループ
                         foreach (var targetContainer in containerSettingList.ContainerSettings)
                         {
-                            string target_image = targetContainer.Image;
-                            string target_image_tag = targetContainer.Tag;
+                            var target_image = targetContainer.Image;
+                            var target_image_tag = targetContainer.Tag;
+
+                            // AWS ECRからのイメージ取得処理を追加
+                            if (farmingSetting.ContainerHost == FARMING_SETTING_CONTAINER_HOST_AWS)
+                            {
+                                // AWS ECRからの認証処理
+                                await AuthenticateToECR(targetContainer);
+                            }
 
                             await containerService.StartContainer(targetContainer);
                         }
@@ -189,12 +246,95 @@ namespace Farming
             }
         }
 
+        /// <summary>
+        /// AWS ECRへの認証処理を行うメソッド
+        /// </summary>
+        /// <param name="targetContainer"></param>
+        /// <returns></returns>
+        private async Task AuthenticateToECR(ContainerSetting targetContainer)
+        {
+            try
+            {
+                _logger.LogInformation($"AWSのコンテナ取得開始{targetContainer.Image}:{targetContainer.Tag}");
+
+                // 認証情報の検証
+                if (string.IsNullOrEmpty(AwsAccessKeyId) || string.IsNullOrEmpty(AwsSecretAccessKey))
+                {
+                    _logger.LogWarning("アクセスキーもしくはシークレットキーがありません。");
+                }
+                else
+                {
+                    // 明示的に認証情報を指定
+                    var credentials = new BasicAWSCredentials(AwsAccessKeyId, AwsSecretAccessKey);
+                    var region = RegionEndpoint.GetBySystemName(AwsRegion);
+
+                    // AWS ECRクライアントの作成（認証情報とリージョンを指定）
+                    var ecrClient = new AmazonECRClient(credentials, region);
+                    await GetECRAuthTokenAndSetToContainer(ecrClient, targetContainer);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"ECRエラー: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// ECR認証トークンを取得してコンテナ設定に設定するヘルパーメソッド
+        /// </summary>
+        /// <param name="ecrClient"></param>
+        /// <param name="targetContainer"></param>
+        /// <returns></returns>
+        private async Task GetECRAuthTokenAndSetToContainer(IAmazonECR ecrClient, ContainerSetting targetContainer)
+        {
+            var authResponse = await ecrClient.GetAuthorizationTokenAsync(new GetAuthorizationTokenRequest());
+
+            if (authResponse.AuthorizationData.Count > 0)
+            {
+                var authData = authResponse.AuthorizationData[0];
+
+                // Base64エンコードされたトークンをデコード
+                var data = Convert.FromBase64String(authData.AuthorizationToken);
+                var decodedToken = Encoding.UTF8.GetString(data);
+
+                // ユーザー名とパスワードを取得（形式: "AWS:password"）
+                var parts = decodedToken.Split(':');
+                var username = parts[0]; // "AWS"
+                var password = parts[1]; // 実際のトークン
+
+                // コンテナ設定に認証情報を設定
+                targetContainer.UserName = username;
+                targetContainer.Password = password;
+
+                // プロキシエンドポイントからレジストリURLを取得
+                var proxyEndpoint = authData.ProxyEndpoint;
+                _logger.LogInformation($"ECRに認証しました。: {proxyEndpoint}");
+
+                // イメージ名がECRリポジトリの完全なURLでない場合は、ECRのURLを使用するように調整
+                if (!targetContainer.Image.Contains(".dkr.ecr."))
+                {
+                    var originalImage = targetContainer.Image;
+                    // プロキシエンドポイントからホスト部分を抽出（https://を除去）
+                    var registryHost = proxyEndpoint.Replace("https://", "");
+
+                    // イメージ名を完全なECRパスに変更
+                    targetContainer.Image = $"{registryHost}/{originalImage}";
+                    _logger.LogInformation($"イメージ名を {originalImage} から {targetContainer.Image} に修正しました。");
+                }
+            }
+            else
+            {
+                _logger.LogError("ECRトークンの取得に失敗しました。");
+            }
+        }
+
         private bool IsIgnoreContainer(string ImageName)
         {
             var ignoreList = new List<string>
-            {
-                MY_CONTAINER_NAME
-            };
+        {
+            MY_CONTAINER_NAME
+        };
 
             foreach (var i in farmingSetting.Ignore)
             {
@@ -243,7 +383,7 @@ namespace Farming
         /// <exception cref="FormatException"></exception>
         private static int ExtractHours(string timeString)
         {
-            string[] parts = timeString.Split(':');
+            var parts = timeString.Split(':');
             if (parts.Length != 2)
             {
                 throw new FormatException("無効な時間形式です。");
@@ -259,7 +399,7 @@ namespace Farming
         /// <exception cref="FormatException"></exception>
         private static int ExtractMinutes(string timeString)
         {
-            string[] parts = timeString.Split(':');
+            var parts = timeString.Split(':');
             if (parts.Length != 2)
             {
                 throw new FormatException("無効な時間形式です。");

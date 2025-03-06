@@ -1,20 +1,22 @@
 {
-    "ContainerSettings" : [
-      {
-        "Image": "iforcomenergysolution/wtm-std",
-        "Name": "wtm-std1",
-        "Tag": "1.01",
-        "Ports": [
-          "80/tcp:5001"
-        ],
-        "Networks": [
-          "wtmnet"
-        ],
-        "Envs": [
-          "WTMSetting:Mongo:MongoDBConnectionString=mongodb://mongodb-primary:27017?readPreference=primary&appname=WRMServer&directConnection=true&ssl=false"
-        ],
-        "UserName": "kyamamoto03",
-        "Password": "826cb776-beee-4fc6-b6be-65ec3b276cb3"
-      }
-    ]
+  "ContainerSettings": [
+    {
+      "Image": "0000000000.dkr.ecr.ap-northeast-1.amazonaws.com/dms-dev/dms-datashipper",
+      "Name": "dms-datashipper",
+      "Tag": "2025030600",
+      "Ports": [
+        "80/tcp:5001"
+      ],
+      "Networks": [
+        "Datashipper"
+      ],
+      "Envs": [
+        "FolderPath=/Folder",
+        "ClientSecret=secret",
+        "DMS-ServerUrl=url"
+      ],
+      "UserName": "kyamamoto03",
+      "Password": "826cb776-beee-4fc6-b6be-65ec3b276cb3"
+    }
+  ]
 }

@@ -30,6 +30,10 @@ namespace Farming
                         URI = builder["URI"],
                         ContainerRemove = builder["ContainerRemove"],
                         WaitTime = int.Parse(builder["WaitTime"]),
+                        ContainerHost = builder["ContainerHost"],
+                        AwsAccessKeyId = builder["AWS:AccessKeyId"],
+                        AwsSecretAccessKey = builder["AWS:SecretAccessKey"],
+                        AwsRegion = builder["AWS:Region"] ?? "us-east-1"
                     };
                     if (builder["Ignore"] is not null)
                     {

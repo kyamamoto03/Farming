@@ -56,7 +56,7 @@ namespace Farming.Services
             {
                 var ExistNetworks = await client.Networks.ListNetworksAsync();
 
-                foreach (string network in targetContainer.Networks)
+                foreach (var network in targetContainer.Networks)
                 {
                     if (!ExistNetworks.Any(x => network == x.Name))
                     {
@@ -124,7 +124,7 @@ namespace Farming.Services
 
         public async Task<ContainerListResponse> GetContainer(string ImageName, string ImageNameTag)
         {
-            IList<ContainerListResponse> containers = await client.Containers.ListContainersAsync(
+            var containers = await client.Containers.ListContainersAsync(
                 new ContainersListParameters()
                 {
                     Limit = 100,
@@ -135,7 +135,7 @@ namespace Farming.Services
 
         public async Task<IList<ContainerListResponse>> GetAllContainer()
         {
-            IList<ContainerListResponse> containers = await client.Containers.ListContainersAsync(
+            var containers = await client.Containers.ListContainersAsync(
                 new ContainersListParameters()
                 {
                     Limit = 100,
@@ -146,7 +146,7 @@ namespace Farming.Services
 
         private async Task<bool> IsRunning(string id)
         {
-            IList<ContainerListResponse> containers = await client.Containers.ListContainersAsync(
+            var containers = await client.Containers.ListContainersAsync(
                 new ContainersListParameters()
                 {
                     Limit = 100,
@@ -169,7 +169,7 @@ namespace Farming.Services
 
         private async Task<bool> IsExist(string id)
         {
-            IList<ContainerListResponse> containers = await client.Containers.ListContainersAsync(
+            var containers = await client.Containers.ListContainersAsync(
                 new ContainersListParameters()
                 {
                     Limit = 100,
@@ -215,9 +215,9 @@ namespace Farming.Services
                         var ps = p.Split(':');
 
                         var ports = new List<PortBinding>
-                        {
-                            new() { HostPort = ps[1] }
-                        };
+                    {
+                        new() { HostPort = ps[1] }
+                    };
 
                         portBindings.Add(ps[0], ports);
                     }
@@ -239,7 +239,7 @@ namespace Farming.Services
                 {
                     networkConfig.EndpointsConfig = new Dictionary<string, EndpointSettings>();
 
-                    string networkName = targetContainer.Networks[0];
+                    var networkName = targetContainer.Networks[0];
                     var endpointSetting = new EndpointSettings();
                     networkConfig.EndpointsConfig.Add(networkName, endpointSetting);
                     hostConfig.NetworkMode = networkName;
@@ -248,9 +248,9 @@ namespace Farming.Services
                 if (string.IsNullOrEmpty(targetContainer.Ulimits) == false)
                 {
                     hostConfig.Ulimits = new List<Ulimit>
-                    {
-                        MakeUlimit(targetContainer.Ulimits)
-                    };
+                {
+                    MakeUlimit(targetContainer.Ulimits)
+                };
                 }
 
                 var cp = new CreateContainerParameters
